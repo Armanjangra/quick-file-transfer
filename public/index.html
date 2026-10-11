@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quick File Transfer</title>
+  <style>
+    :root {
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --danger: #ef4444;
+      --danger-bg: #fef2f2;
+      --success: #10b981;
+      --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+      --dropzone-bg: #f8fafc;
+      --dropzone-hover: #eff6ff;
+      --badge-bg: #f1f5f9;
+      --progress-bg: #e2e8f0;
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --danger: #f87171;
+      --danger-bg: #450a0a;
+      --success: #34d399;
+      --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3);
+      --dropzone-bg: #0f172a;
+      --dropzone-hover: #1e293b;
+      --badge-bg: #334155;
+      --progress-bg: #334155;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      padding: 32px 20px;
+      max-width: 950px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+    }
+
+    .subtitle-badge {
+      display: inline-block;
+      margin-top: 4px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .author-badge {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .theme-toggle {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 8px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: var(--shadow);
+    }
+
+    .theme-toggle:hover {
+      border-color: var(--primary);
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+    }
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .device-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--dropzone-bg);
+      padding: 14px 18px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      background-color: var(--success);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--success);
+    }
+
+    .device-info {
+      flex-grow: 1;
+    }
+
+    .device-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .device-url {
+      font-size: 0.825rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .btn-copy {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .btn-copy:hover {
+      background: var(--primary-hover);
+    }
+
+    .dropzone {
+      border: 2px dashed var(--border-color);
+      border-radius: 12px;
+      padding: 32px 20px;
+      text-align: center;
+      background: var(--dropzone-bg);
+      cursor: pointer;
+    }
+
+    .dropzone:hover, .dropzone.dragover {
+      border-color: var(--primary);
+      background: var(--dropzone-hover);
+    }
+
+    .dropzone-icon {
+      font-size: 2.5rem;
+      margin-bottom: 8px;
+    }
+
+    .dropzone p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .file-select-btn {
+      display: inline-block;
+      background: var(--primary);
+      color: white;
+      padding: 8px 18px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    #fileInput {
+      display: none;
+    }
+
+    .selected-files {
+      margin-top: 14px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .progress-container {
+      margin-top: 16px;
+      display: none;
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 8px;
+      background: var(--progress-bg);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      width: 0%;
+      height: 100%;
+      background: var(--primary);
+      transition: width 0.1s linear;
+    }
+
+    .progress-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .upload-action-btn {
+      margin-top: 16px;
+      width: 100%;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .upload-action-btn:hover {
+      background: var(--primary-hover);
+    }
+
+    .upload-action-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    #status {
+      margin-top: 12px;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th {
+      text-align: left;
+      padding: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    td {
+      padding: 14px 12px;
+      border-bottom: 1px solid var(--border-color);
+      vertical-align: middle;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .badge-size {
+      display: inline-block;
+      background: var(--badge-bg);
+      color: var(--text-muted);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 6px 12px;
+      font-size: 0.825rem;
+      font-weight: 500;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .btn-download {
+      background: var(--badge-bg);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-download:hover {
+      border-color: var(--primary);
+    }
+
+    .btn-delete {
+      background: var(--danger-bg);
+      color: var(--danger);
+      border: 1px solid var(--danger);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 32px;
+      color: var(--text-muted);
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 32px;
+      font-size: 0.825rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div>
+      <h1>Quick File Transfer</h1>
+      <div class="subtitle-badge">Local & Network Share Hub • <span class="author-badge">Created by AJ</span></div>
+    </div>
+    <button class="theme-toggle" id="themeToggleBtn" onclick="toggleTheme()">
+      <span id="themeIcon">🌙</span> <span id="themeText">Dark Mode</span>
+    </button>
+  </header>
+
+  <div class="card">
+    <div class="card-title">
+      Active Device Status
+    </div>
+    <div class="device-box">
+      <div class="status-dot"></div>
+      <div class="device-info">
+        <div class="device-name" id="hostnameText">Detecting device...</div>
+        <div class="device-url" id="networkUrlText">Fetching local Wi-Fi IP address...</div>
+      </div>
+      <button class="btn-copy" id="copyUrlBtn" onclick="copyNetworkUrl()">Copy Link</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Upload Files</div>
+    
+    <div class="dropzone" id="dropzone">
+      <div class="dropzone-icon">📁</div>
+      <p>Drag and drop files here, or click to select</p>
+      <label for="fileInput" class="file-select-btn">Choose Files</label>
+      <input type="file" id="fileInput" multiple />
+    </div>
+
+    <div class="selected-files" id="selectedFilesText">No files selected</div>
+
+    <div class="progress-container" id="progressContainer">
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressBarFill"></div>
+      </div>
+      <div class="progress-labels">
+        <span id="progressStatusText">Uploading...</span>
+        <span id="progressPercentText">0%</span>
+      </div>
+    </div>
+
+    <button class="upload-action-btn" id="uploadBtn" onclick="uploadFiles()" disabled>Upload Now</button>
+    <div id="status"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Available Downloads</div>
+    <table>
+      <thead>
+        <tr>
+          <th>File Name</th>
+          <th>Size</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="filesTableBody">
+        <tr><td colspan="3" class="empty-state">Loading files...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer>
+    Quick File Transfer &bull; Created by AJ
+  </footer>
+
+  <script>
+    let networkShareUrl = '';
+
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      updateThemeUI(savedTheme);
+    }
+
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      updateThemeUI(newTheme);
+    }
+
+    function updateThemeUI(theme) {
+      const icon = document.getElementById('themeIcon');
+      const text = document.getElementById('themeText');
+      if (theme === 'dark') {
+        icon.textContent = '☀️';
+        text.textContent = 'Light Mode';
+      } else {
+        icon.textContent = '🌙';
+        text.textContent = 'Dark Mode';
+      }
+    }
+
+    async function loadDeviceInfo() {
+      try {
+        const res = await fetch('/device-info');
+        if (res.ok) {
+          const data = await res.json();
+          document.getElementById('hostnameText').textContent = `Device: ${data.hostname}`;
+          if (data.ips && data.ips.length > 0) {
+            networkShareUrl = `http://${data.ips[0]}:${data.port}`;
+            document.getElementById('networkUrlText').textContent = `Share URL: ${networkShareUrl}`;
+          } else {
+            networkShareUrl = `http://localhost:${data.port}`;
+            document.getElementById('networkUrlText').textContent = `Share URL: ${networkShareUrl}`;
+          }
+        }
+      } catch (e) {
+        document.getElementById('hostnameText').textContent = 'Local PC Server';
+        document.getElementById('networkUrlText').textContent = 'http://localhost:3000';
+      }
+    }
+
+    function copyNetworkUrl() {
+      if (!networkShareUrl) return;
+      navigator.clipboard.writeText(networkShareUrl);
+      const copyBtn = document.getElementById('copyUrlBtn');
+      copyBtn.textContent = 'Copied!';
+      setTimeout(() => { copyBtn.textContent = 'Copy Link'; }, 2000);
+    }
+
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const selectedFilesText = document.getElementById('selectedFilesText');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const status = document.getElementById('status');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBarFill = document.getElementById('progressBarFill');
+    const progressStatusText = document.getElementById('progressStatusText');
+    const progressPercentText = document.getElementById('progressPercentText');
+
+    ['dragenter', 'dragover'].forEach(name => {
+      dropzone.addEventListener(name, (e) => {
+        e.preventDefault();
+        dropzone.classList.add('dragover');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach(name => {
+      dropzone.addEventListener(name, (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+      });
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      fileInput.files = e.dataTransfer.files;
+      updateFileSelection();
+    });
+
+    fileInput.addEventListener('change', updateFileSelection);
+
+    function updateFileSelection() {
+      const count = fileInput.files.length;
+      if (count === 0) {
+        selectedFilesText.textContent = 'No files selected';
+        uploadBtn.disabled = true;
+      } else if (count === 1) {
+        selectedFilesText.textContent = `Selected: ${fileInput.files[0].name}`;
+        uploadBtn.disabled = false;
+      } else {
+        selectedFilesText.textContent = `Selected ${count} files`;
+        uploadBtn.disabled = false;
+      }
+    }
+
+    async function loadFiles() {
+      const tbody = document.getElementById('filesTableBody');
+      try {
+        const res = await fetch('/files');
+        if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+        const files = await res.json();
+        
+        tbody.innerHTML = '';
+
+        if (!Array.isArray(files) || files.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="3" class="empty-state">No files available. Upload one to get started!</td></tr>';
+          return;
+        }
+
+        files.forEach(file => {
+          const tr = document.createElement('tr');
+
+          const tdName = document.createElement('td');
+          tdName.textContent = file.originalname || file.filename;
+
+          const tdSize = document.createElement('td');
+          const sizeKb = file.size ? (file.size / 1024).toFixed(1) : '0';
+          tdSize.innerHTML = `<span class="badge-size">${sizeKb} KB</span>`;
+
+          const tdActions = document.createElement('td');
+          const actionsDiv = document.createElement('div');
+          actionsDiv.className = 'actions';
+
+          const aDownload = document.createElement('a');
+          aDownload.href = `/download/${encodeURIComponent(file.filename)}`;
+          aDownload.className = 'btn btn-download';
+          aDownload.textContent = 'Download';
+          aDownload.download = file.originalname || file.filename;
+
+          const btnDelete = document.createElement('button');
+          btnDelete.className = 'btn btn-delete';
+          btnDelete.textContent = 'Delete';
+          btnDelete.onclick = () => deleteFile(file.filename);
+
+          actionsDiv.appendChild(aDownload);
+          actionsDiv.appendChild(btnDelete);
+          tdActions.appendChild(actionsDiv);
+
+          tr.appendChild(tdName);
+          tr.appendChild(tdSize);
+          tr.appendChild(tdActions);
+
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="3" class="empty-state">Failed to load files: ${err.message}</td></tr>`;
+      }
+    }
+
+    function uploadFiles() {
+      if (!fileInput.files.length) return;
+
+      const formData = new FormData();
+      for (let file of fileInput.files) {
+        formData.append('files', file);
+      }
+
+      progressContainer.style.display = 'block';
+      progressBarFill.style.width = '0%';
+      progressPercentText.textContent = '0%';
+      progressStatusText.textContent = 'Uploading...';
+      status.innerText = '';
+      uploadBtn.disabled = true;
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/upload', true);
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          progressBarFill.style.width = percent + '%';
+          progressPercentText.textContent = percent + '%';
+          const loadedMb = (e.loaded / (1024 * 1024)).toFixed(1);
+          const totalMb = (e.total / (1024 * 1024)).toFixed(1);
+          progressStatusText.textContent = `Uploading ${loadedMb} MB of ${totalMb} MB...`;
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          status.style.color = 'var(--success)';
+          status.innerText = 'Upload complete!';
+          fileInput.value = '';
+          updateFileSelection();
+          loadFiles();
+        } else {
+          status.style.color = 'var(--danger)';
+          status.innerText = 'Upload failed.';
+          uploadBtn.disabled = false;
+        }
+        setTimeout(() => { progressContainer.style.display = 'none'; }, 2000);
+      };
+
+      xhr.onerror = () => {
+        status.style.color = 'var(--danger)';
+        status.innerText = 'Network error during upload.';
+        uploadBtn.disabled = false;
+        progressContainer.style.display = 'none';
+      };
+
+      xhr.send(formData);
+    }
+
+    async function deleteFile(filename) {
+      if (!confirm('Are you sure you want to delete this file?')) return;
+      try {
+        const res = await fetch('/files/' + encodeURIComponent(filename), { method: 'DELETE' });
+        if (res.ok) {
+          loadFiles();
+        } else {
+          alert('Failed to delete file');
+        }
+      } catch (err) {
+        alert('Error deleting file: ' + err.message);
+      }
+    }
+
+    initTheme();
+    loadDeviceInfo();
+    loadFiles();
+  </script>
+</body>
+</html>
