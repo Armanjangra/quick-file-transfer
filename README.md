@@ -2,7 +2,7 @@
 
 > A fast, cross-device local Wi-Fi file sharing desktop application built with Electron and Express.
 
-![Quick File Transfer Banner](https://via.placeholder.com/800x400?text=Quick+File+Transfer+UI+Preview)
+
 
 ## ✨ Features
 - 🚀 **Lightning Fast**: Transfer files over local Wi-Fi without internet usage.
